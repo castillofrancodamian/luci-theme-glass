@@ -5,7 +5,7 @@
 </main>
 
 <footer class="glass-footer">
-  <span>GlassTheme v1.0.1</span>
+  <span>GlassTheme v1.0.2</span>
   <span class="footer-sep">|</span>
   <a href="https://github.com/openwrt/luci" target="_blank">{{ version.luciname }} ({{ version.luciversion }})</a>
   <span class="footer-sep">|</span>
@@ -89,10 +89,22 @@
       /* Move CBI tabmenus (.cbi-tabmenu) into sub-nav bar */
       if (!headerSub) return;
       var tabmenus = content.querySelectorAll('.cbi-tabmenu');
-      tabmenus.forEach(function(ul) {
-        if (ul.dataset.moved) return;
-        ul.dataset.moved = '1';
+      if (tabmenus.length === 0) return;
 
+      /* Skip rebuild if we're in the middle of a tab click */
+      if (headerSub._switching) return;
+
+      /* Clear existing sub-tabs to prevent duplicates on re-render (Save & Apply) */
+      headerSub.innerHTML = '';
+      headerSub.classList.remove('active');
+      document.body.classList.remove('has-sub-nav');
+
+      /* Sliding selector for sub-tabs */
+      var slider = document.createElement('div');
+      slider.className = 'tab-slider';
+      headerSub.appendChild(slider);
+
+      tabmenus.forEach(function(ul) {
         var items = ul.querySelectorAll('li');
         items.forEach(function(li) {
           var a = li.querySelector('a');
@@ -101,11 +113,18 @@
           tab.className = 'sub-tab' + (li.classList.contains('cbi-tab') ? ' active' : '');
           tab.addEventListener('click', function(ev) {
             ev.preventDefault();
+            /* Guard: prevent MutationObserver from rebuilding during tab switch */
+            headerSub._switching = true;
             a.click();
+            setTimeout(function() { headerSub._switching = false; }, 100);
             headerSub.querySelectorAll('.sub-tab').forEach(function(t) {
               t.classList.remove('active');
             });
             tab.classList.add('active');
+            /* Slide to clicked tab */
+            slider.style.left = tab.offsetLeft + 'px';
+            slider.style.width = tab.offsetWidth + 'px';
+            slider.style.opacity = '1';
           });
           headerSub.appendChild(tab);
         });
@@ -113,6 +132,20 @@
         ul.style.display = 'none';
         headerSub.classList.add('active');
         document.body.classList.add('has-sub-nav');
+      });
+
+      /* Position slider on active sub-tab */
+      requestAnimationFrame(function() {
+        var active = headerSub.querySelector('.sub-tab.active');
+        if (active) {
+          slider.style.transition = 'none';
+          slider.style.left = active.offsetLeft + 'px';
+          slider.style.width = active.offsetWidth + 'px';
+          slider.style.opacity = '1';
+          requestAnimationFrame(function() {
+            slider.style.transition = '';
+          });
+        }
       });
     }
 

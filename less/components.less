@@ -697,12 +697,6 @@ input[type="radio"] {
   background: rgba(0, 0, 0, 0.35);
   z-index: var(--z-modal);
 
-  &.modal-overlay-active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   > .modal {
     .glass-frosted();
     border-radius: var(--radius-xl);
@@ -711,4 +705,11 @@ input[type="radio"] {
     width: calc(100% - var(--space-2xl) * 2);
     z-index: calc(var(--z-modal) + 1);
   }
+}
+
+/* LuCI adds modal-overlay-active to <body>, not to #modal_overlay */
+body.modal-overlay-active #modal_overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

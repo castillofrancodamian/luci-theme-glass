@@ -62,7 +62,7 @@
       else{s='auto';d.media='(prefers-color-scheme: dark)';if(m)m.content=window.matchMedia('(prefers-color-scheme: dark)').matches?'#2c2e3a':'#f5f5f7'}
     }else{
       var media=d.media;
-      if(media==='all')s='dark';else if(media==='not all')s='light';else s='auto';
+      if(media==='all')s='dark';else if(media==='not all')s='light';else{s='auto';if(m)m.content=window.matchMedia('(prefers-color-scheme: dark)').matches?'#2c2e3a':'#f5f5f7'}
     }
     document.documentElement.dataset.theme=s;
   })();
@@ -102,7 +102,7 @@
     <img class="login-logo" src="{{ media }}/img/glass-logo.svg" alt="Logo">
     <h1 class="login-title">{{ hostname }}</h1>
     <p class="login-subtitle">{{ _('Sign in to continue') }}</p>
-    <p class="login-version">GlassTheme v1.0.1</p>
+    <p class="login-version">GlassTheme v1.0.2</p>
 
     {% if (fuser): %}
     <div class="login-error">

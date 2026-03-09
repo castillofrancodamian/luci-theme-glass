@@ -169,26 +169,89 @@
     width: 16px;
     height: 16px;
     opacity: 0.4;
-    transition: transform var(--transition-fast);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity var(--transition-fast);
   }
 
   &.open .nav-arrow {
     transform: rotate(90deg);
+    opacity: 0.6;
   }
 }
 
 .nav-sub {
+  position: relative;
   overflow: hidden;
   max-height: 0;
-  transition: max-height var(--transition-normal);
+  opacity: 0;
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease;
 
   &.open {
     max-height: 500px;
+    opacity: 1;
   }
 
   .nav-item {
     padding-left: calc(var(--space-xl) + 32px);
     font-size: var(--font-size-sm);
+    transform: translateX(-8px);
+    opacity: 0;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.2s ease,
+      color var(--transition-fast);
+
+    /* Sub-item active state — no background, slider handles it */
+    &.active {
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      font-weight: var(--font-weight-medium);
+    }
+  }
+
+  &.open .nav-item {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  // Stagger sub-items (nth-of-type since slider is first child)
+  &.open .nav-item:nth-of-type(1) { transition-delay: 0.03s; }
+  &.open .nav-item:nth-of-type(2) { transition-delay: 0.06s; }
+  &.open .nav-item:nth-of-type(3) { transition-delay: 0.09s; }
+  &.open .nav-item:nth-of-type(4) { transition-delay: 0.12s; }
+  &.open .nav-item:nth-of-type(5) { transition-delay: 0.15s; }
+  &.open .nav-item:nth-of-type(6) { transition-delay: 0.18s; }
+  &.open .nav-item:nth-of-type(7) { transition-delay: 0.21s; }
+  &.open .nav-item:nth-of-type(8) { transition-delay: 0.24s; }
+  &.open .nav-item:nth-of-type(n+9) { transition-delay: 0.27s; }
+
+  .nav-slider {
+    position: absolute;
+    left: var(--space-sm);
+    right: var(--space-sm);
+    top: 0;
+    height: 0;
+    opacity: 0;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 0.5px solid rgba(255, 255, 255, 0.45);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.04),
+      inset 0 1px 1px rgba(255, 255, 255, 0.35),
+      inset 0 0 4px rgba(255, 255, 255, 0.10);
+    transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      height 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.2s ease;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .nav-item {
+    position: relative;
+    z-index: 1;
   }
 }
 
@@ -272,6 +335,7 @@
 #header-tabs {
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .header-sep {
@@ -298,15 +362,41 @@
   }
 
   &.active {
-    background: rgba(255, 255, 255, 0.45);
     color: var(--color-text);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.08),
-      inset 0 1px 1px rgba(255, 255, 255, 0.60),
-      inset 0 0 6px rgba(255, 255, 255, 0.15);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
+}
+
+/* Horizontal sliding selector for header tabs */
+.tab-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  opacity: 0;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.60),
+    inset 0 0 6px rgba(255, 255, 255, 0.15);
+  transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.header-tab,
+.sub-tab {
+  position: relative;
+  z-index: 1;
 }
 
 /* ---- Glass pill badges (title + indicators) ---- */
@@ -364,6 +454,14 @@
       color: var(--color-primary);
     }
   }
+}
+
+/* Separator when indicators appear alongside theme toggle */
+.header-actions [data-indicator] + .theme-toggle,
+.header-actions .theme-toggle + [data-indicator] {
+  border-left: 0.5px solid rgba(128, 128, 128, 0.25);
+  margin-left: var(--space-xs);
+  padding-left: var(--space-sm);
 }
 
 /* ---- Theme toggle button ---- */
@@ -509,14 +607,31 @@ html[data-theme="dark"] .theme-icon-dark {
   }
 
   &.active {
-    background: rgba(255, 255, 255, 0.45);
     color: var(--color-text);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.08),
-      inset 0 1px 1px rgba(255, 255, 255, 0.60),
-      inset 0 0 6px rgba(255, 255, 255, 0.15);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Sub-tab slider — inset to match sub-tab content area */
+#header-sub > .tab-slider {
+  border-radius: var(--radius-sm);
+  top: 3px;
+  bottom: 3px;
+  height: auto;
+}
+
+/* ---- Page transition ---- */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -527,6 +642,24 @@ html[data-theme="dark"] .theme-icon-dark {
   min-height: calc(100vh - 44px - var(--sidebar-gap) * 2);
   padding: var(--content-padding);
   transition: margin-left var(--transition-slow);
+  animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* JS view content — fade in when LuCI replaces the spinner */
+#view > :not(.spinning) {
+  animation: page-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Hide LuCI's "Loading view..." spinner */
+#view > .spinning {
+  display: none;
+}
+
+/* Fade-out before navigation */
+body.page-leaving #content-wrap {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 /* Push content down when sub-nav is visible */

@@ -31,6 +31,19 @@ return baseclass.extend({
 		var container = document.getElementById('sidebar-nav');
 		if (!container) return;
 
+		/* Clear existing menu elements to prevent duplicates on re-render (e.g. Save & Apply) */
+		container.innerHTML = '';
+
+		var headerNav = document.getElementById('header-nav');
+		if (headerNav) {
+			/* Remove only tabs and sliders, preserve header-title */
+			var old = headerNav.querySelectorAll('.header-tab, .tab-slider');
+			for (var k = 0; k < old.length; k++) old[k].remove();
+		}
+
+		var headerTabs = document.getElementById('header-tabs');
+		if (headerTabs) headerTabs.innerHTML = '';
+
 		var topChildren = ui.menu.getChildren(tree);
 
 		for (var i = 0; i < topChildren.length; i++) {
@@ -75,6 +88,60 @@ return baseclass.extend({
 		}
 	},
 
+	/* Shared: position a slider behind the active tab element */
+	positionTabSlider: function(container, slider, activeEl, animate) {
+		if (!activeEl) return;
+		if (!animate) slider.style.transition = 'none';
+		slider.style.left = activeEl.offsetLeft + 'px';
+		slider.style.width = activeEl.offsetWidth + 'px';
+		slider.style.opacity = '1';
+		if (!animate) {
+			requestAnimationFrame(function() {
+				slider.style.transition = '';
+			});
+		}
+	},
+
+	/* Shared: add slider to a horizontal tab container */
+	addTabSlider: function(container, navigateOnClick) {
+		var slider = E('div', { 'class': 'tab-slider' });
+		container.insertBefore(slider, container.firstChild);
+		var self = this;
+
+		/* Attach click handlers to all tabs */
+		var tabs = container.querySelectorAll('.header-tab, .sub-tab');
+		for (var i = 0; i < tabs.length; i++) {
+			(function(tab, sl) {
+				tab.addEventListener('click', function(ev) {
+					if (navigateOnClick) {
+						/* Slide first, then navigate */
+						ev.preventDefault();
+						var prev = container.querySelector('.header-tab.active, .sub-tab.active');
+						if (prev) prev.classList.remove('active');
+						tab.classList.add('active');
+						self.positionTabSlider(container, sl, tab, true);
+						document.body.classList.add('page-leaving');
+						var href = tab.href;
+						setTimeout(function() {
+							window.location.href = href;
+						}, 180);
+					} else {
+						/* In-page tab switch — just move slider */
+						self.positionTabSlider(container, sl, tab, true);
+					}
+				});
+			})(tabs[i], slider);
+		}
+
+		/* Position on active tab */
+		requestAnimationFrame(function() {
+			var active = container.querySelector('.header-tab.active, .sub-tab.active');
+			self.positionTabSlider(container, slider, active, false);
+		});
+
+		return slider;
+	},
+
 	renderModeMenu: function(topChildren) {
 		var container = document.getElementById('header-nav');
 		if (!container) return;
@@ -93,6 +160,9 @@ return baseclass.extend({
 
 			container.appendChild(item);
 		}
+
+		/* Add sliding selector */
+		this.addTabSlider(container, true);
 	},
 
 	renderSidebarMenu: function(container, tree, url) {
@@ -155,6 +225,10 @@ return baseclass.extend({
 					'class': 'nav-sub' + (isActive ? ' open' : '')
 				});
 
+				/* Sliding highlight indicator */
+				var slider = E('div', { 'class': 'nav-slider' });
+				subMenu.appendChild(slider);
+
 				for (var j = 0; j < subChildren.length; j++) {
 					var sub = subChildren[j];
 					var isSubActive = isActive && L.env.dispatchpath[2] == sub.name;
@@ -166,8 +240,42 @@ return baseclass.extend({
 						E('span', { 'class': 'nav-label' }, [ _(sub.title) ])
 					]);
 
+					/* Slide highlight to clicked item before navigating */
+					(function(el, sl) {
+						el.addEventListener('click', function(ev) {
+							ev.preventDefault();
+							var prev = el.parentNode.querySelector('.nav-item.active');
+							if (prev) prev.classList.remove('active');
+							el.classList.add('active');
+							sl.style.top = el.offsetTop + 'px';
+							sl.style.height = el.offsetHeight + 'px';
+							sl.style.opacity = '1';
+							document.body.classList.add('page-leaving');
+							setTimeout(function() {
+								window.location.href = el.href;
+							}, 180);
+						});
+					})(subItem, slider);
+
 					subMenu.appendChild(subItem);
 				}
+
+				/* Position slider on the active item after render */
+				(function(sm, sl) {
+					requestAnimationFrame(function() {
+						var active = sm.querySelector('.nav-item.active');
+						if (active) {
+							sl.style.transition = 'none';
+							sl.style.top = active.offsetTop + 'px';
+							sl.style.height = active.offsetHeight + 'px';
+							sl.style.opacity = '1';
+							/* Re-enable transition after initial position */
+							requestAnimationFrame(function() {
+								sl.style.transition = '';
+							});
+						}
+					});
+				})(subMenu, slider);
 
 				group.appendChild(subMenu);
 
@@ -175,6 +283,7 @@ return baseclass.extend({
 				item.removeEventListener('click', item._handler);
 				(function(navItem, subEl) {
 					navItem.addEventListener('click', function(ev) {
+						ev.preventDefault();
 						var isOpen = subEl.classList.contains('open');
 						if (isOpen) {
 							subEl.classList.remove('open');
@@ -216,6 +325,9 @@ return baseclass.extend({
 			if (isActive)
 				activeNode = child;
 		}
+
+		/* Add sliding selector */
+		this.addTabSlider(container, true);
 
 		if (activeNode)
 			this.renderTabMenu(activeNode, url + '/' + activeNode.name, (level || 0) + 1);

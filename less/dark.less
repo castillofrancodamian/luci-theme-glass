@@ -234,6 +234,26 @@ select {
     inset 0 0 8px rgba(255, 255, 255, 0.08);
 }
 
+/* Sub-item active — slider handles highlight */
+.nav-sub .nav-item.active {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Sliding selector — dark glass */
+.nav-sub .nav-slider {
+  background: rgba(255, 255, 255, 0.08);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.20),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    inset 0 0 4px rgba(255, 255, 255, 0.03);
+}
+
 /* Header tabs */
 .header-tab {
   &:hover {
@@ -241,15 +261,23 @@ select {
     color: var(--color-text);
   }
   &.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: var(--color-text);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow:
-      0 2px 6px rgba(0, 0, 0, 0.30),
-      inset 0 1px 2px rgba(255, 255, 255, 0.12),
-      inset 0 0 8px rgba(255, 255, 255, 0.08);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
+}
+
+/* Tab slider — dark glass */
+.tab-slider {
+  background: rgba(255, 255, 255, 0.10);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.30),
+    inset 0 1px 2px rgba(255, 255, 255, 0.10),
+    inset 0 0 8px rgba(255, 255, 255, 0.06);
 }
 
 /* Sub-nav bar */
@@ -276,14 +304,10 @@ select {
   }
 
   &.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: var(--color-text);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow:
-      0 2px 6px rgba(0, 0, 0, 0.30),
-      inset 0 1px 2px rgba(255, 255, 255, 0.12),
-      inset 0 0 8px rgba(255, 255, 255, 0.08);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
 

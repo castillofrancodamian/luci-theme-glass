@@ -2,7 +2,7 @@
 set -e
 
 PKG_NAME="luci-theme-glass"
-PKG_VERSION="1.0.1"
+PKG_VERSION="1.0.2"
 PKG_RELEASE="1"
 MAINTAINER="Ryan Chen <rchen14b@gmail.com>"
 DESCRIPTION="Glass - Apple-inspired glassmorphism theme for LuCI"
@@ -84,31 +84,55 @@ echo "2.0" > "$IPK_DIR/debian-binary"
 echo "    -> $DIST_DIR/${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.ipk"
 
 # ============================================================
-# Build APK (apk-tools — OpenWrt 24.10+)
+# Build APK (apk-tools v3 ADB format — OpenWrt 24.10+)
+# Requires Docker (uses Alpine container with apk mkpkg)
 # ============================================================
 echo "==> Building APK..."
 
-APK_DIR="$WORK_DIR/apk"
-mkdir -p "$APK_DIR"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APK_FILENAME="${PKG_NAME}-${PKG_VERSION}-r${PKG_RELEASE}.apk"
 
-cat > "$APK_DIR/.PKGINFO" <<EOF
-pkgname = $PKG_NAME
-pkgver = ${PKG_VERSION}-r${PKG_RELEASE}
-pkgdesc = $DESCRIPTION
-url = $HOMEPAGE
-builddate = $BUILD_DATE
-packager = $MAINTAINER
-size = $INSTALLED_BYTES
-arch = all
-license = $LICENSE
-origin = $PKG_NAME
+if ! command -v docker &>/dev/null; then
+  echo "    [SKIP] Docker not found — APK build requires Docker with Alpine"
+  echo "    IPK package was built successfully."
+else
+  # Prepare post-install script for APK
+  APK_SCRIPT="$WORK_DIR/post-install.sh"
+  cat > "$APK_SCRIPT" <<'SCRIPT'
+#!/bin/sh
+uci get luci.themes.Glass >/dev/null 2>&1 || \
+uci batch <<-EOF
+	set luci.themes.Glass=/luci-static/glass
+	set luci.main.mediaurlbase=/luci-static/glass
+	commit luci
 EOF
+exit 0
+SCRIPT
+  chmod 755 "$APK_SCRIPT"
 
-cp -r "$DATA_DIR"/* "$APK_DIR/"
+  # Build using Alpine container with apk mkpkg
+  docker run --rm \
+    -v "$DATA_DIR:/pkg/files:ro" \
+    -v "$APK_SCRIPT:/pkg/post-install.sh:ro" \
+    -v "$SCRIPT_DIR/$DIST_DIR:/pkg/out" \
+    alpine:latest sh -c "
+      apk add --no-cache apk-tools-mkpkg >/dev/null 2>&1 || true
+      apk mkpkg \
+        --info 'name:$PKG_NAME' \
+        --info 'version:${PKG_VERSION}-r${PKG_RELEASE}' \
+        --info 'description:$DESCRIPTION' \
+        --info 'arch:noarch' \
+        --info 'license:$LICENSE' \
+        --info 'origin:$PKG_NAME' \
+        --info 'url:$HOMEPAGE' \
+        --info 'maintainer:$MAINTAINER' \
+        --script 'post-install:/pkg/post-install.sh' \
+        --files /pkg/files \
+        --output /pkg/out/$APK_FILENAME
+    " 2>&1
 
-(cd "$APK_DIR" && $TAR --format=gnu --numeric-owner --owner=0 --group=0 -czf "$OLDPWD/$DIST_DIR/${PKG_NAME}-${PKG_VERSION}-r${PKG_RELEASE}.apk" .PKGINFO $(ls -d */ 2>/dev/null))
-
-echo "    -> $DIST_DIR/${PKG_NAME}-${PKG_VERSION}-r${PKG_RELEASE}.apk"
+  echo "    -> $DIST_DIR/$APK_FILENAME"
+fi
 
 echo ""
 echo "==> Done! Packages in $DIST_DIR/"
