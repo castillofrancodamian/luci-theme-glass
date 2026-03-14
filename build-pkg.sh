@@ -41,7 +41,7 @@ BUILD_DATE=$(date +%s)
 mkdir -p "$DIST_DIR"
 
 # ============================================================
-# Build IPK (opkg — OpenWrt 19.07 - 23.05)
+# Build IPK (opkg — OpenWrt 24.10 and earlier)
 # ============================================================
 echo "==> Building IPK..."
 
@@ -84,7 +84,7 @@ echo "2.0" > "$IPK_DIR/debian-binary"
 echo "    -> $DIST_DIR/${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.ipk"
 
 # ============================================================
-# Build APK (apk-tools v3 ADB format — OpenWrt 24.10+)
+# Build APK (apk-tools v3 ADB format — OpenWrt 25.12+)
 # Requires Docker (uses Alpine container with apk mkpkg)
 # ============================================================
 echo "==> Building APK..."

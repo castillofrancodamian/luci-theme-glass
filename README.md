@@ -6,7 +6,7 @@ A glassmorphism theme for OpenWrt LuCI, inspired by Apple's visionOS and macOS. 
 
 ![License](https://img.shields.io/badge/license-GPL--3.0%20%2F%20Commercial-blue.svg)
 ![OpenWrt](https://img.shields.io/badge/OpenWrt-23.05%2B-brightgreen.svg)
-![Version](https://img.shields.io/badge/version-1.0.3-orange.svg)
+![Version](https://img.shields.io/badge/version-1.0.4-orange.svg)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/rchen14b)
 
 ## Screenshots
@@ -57,11 +57,10 @@ A glassmorphism theme for OpenWrt LuCI, inspired by Apple's visionOS and macOS. 
 
 ### From release (recommended)
 
-Download the latest `.ipk` from [Releases](../../releases) and install:
+Download the latest package from [Releases](../../releases):
 
-```sh
-opkg install luci-theme-glass_*.ipk
-```
+- **OpenWrt 25.12+** (apk): `apk add --allow-untrusted luci-theme-glass-*.apk`
+- **OpenWrt 24.10 and earlier** (opkg): `opkg install luci-theme-glass_*.ipk`
 
 ### From source
 
