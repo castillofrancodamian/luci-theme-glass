@@ -205,18 +205,7 @@ return baseclass.extend({
 					E('polyline', { 'points': '9 18 15 12 9 6' })
 				]));
 
-				item.addEventListener('click', L.bind(function(subEl, ev) {
-					/* Allow navigation but toggle submenu */
-					var isOpen = subEl.classList.contains('open');
-					if (isOpen) {
-						subEl.classList.remove('open');
-						ev.currentTarget.classList.remove('open');
-					} else {
-						subEl.classList.add('open');
-						ev.currentTarget.classList.add('open');
-					}
-				}, this, null)); /* placeholder, bound below */
-			}
+				}
 
 			group.appendChild(item);
 
@@ -279,8 +268,7 @@ return baseclass.extend({
 
 				group.appendChild(subMenu);
 
-				/* Rebind click handler with actual subMenu element */
-				item.removeEventListener('click', item._handler);
+				/* Bind click handler to toggle submenu */
 				(function(navItem, subEl) {
 					navItem.addEventListener('click', function(ev) {
 						ev.preventDefault();

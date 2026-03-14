@@ -1,8 +1,12 @@
 {
     "luci-theme-glass": {
-        "description": "Grant UCI access for luci-theme-glass",
+        "description": "Grant access for luci-theme-glass",
         "read": {
-            "uci": [ "glass" ]
+            "uci": [ "glass" ],
+            "ubus": {
+                "network.interface": [ "dump" ],
+                "network.device": [ "status" ]
+            }
         }
     }
 }

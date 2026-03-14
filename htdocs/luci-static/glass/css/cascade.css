@@ -508,6 +508,71 @@ h3 {
   position: relative;
   z-index: 1;
 }
+/* ---- Status indicators (center of header) ---- */
+#status-indicators {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px var(--space-md);
+  border-radius: var(--radius-md);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 25%, rgba(240, 248, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 75%, rgba(230, 240, 255, 0.1) 100%);
+  background-color: transparent;
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03), 0 0 0 0.5px rgba(255, 255, 255, 0.08) inset, 0 1px 6px rgba(255, 255, 255, 0.1) inset;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+#status-indicators:empty {
+  display: none;
+}
+#status-indicators [data-indicator] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  cursor: default;
+  transition: color 0.3s ease;
+  /* Level colors — neutral by default, color only when noteworthy */
+}
+#status-indicators [data-indicator] .indicator-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+#status-indicators [data-indicator][data-level="warn"] {
+  color: #FF9500;
+}
+#status-indicators [data-indicator][data-level="warn"] .indicator-icon {
+  opacity: 0.85;
+}
+#status-indicators [data-indicator][data-level="crit"] {
+  color: #FF3B30;
+}
+#status-indicators [data-indicator][data-level="crit"] .indicator-icon {
+  opacity: 0.9;
+}
+#status-indicators [data-indicator][data-level="active"] {
+  color: #007AFF;
+}
+#status-indicators [data-indicator][data-level="active"] .indicator-icon {
+  opacity: 0.8;
+}
+#status-indicators [data-indicator][data-level="busy"] {
+  color: #AF52DE;
+}
+#status-indicators [data-indicator][data-level="busy"] .indicator-icon {
+  opacity: 0.85;
+}
+#status-indicators [data-indicator] + [data-indicator] {
+  border-left: 0.5px solid rgba(128, 128, 128, 0.25);
+  padding-left: var(--space-sm);
+}
 /* ---- Glass pill badges (title + indicators) ---- */
 .header-title {
   font-size: var(--font-size-sm);
@@ -543,20 +608,17 @@ h3 {
   display: none;
 }
 .header-actions [data-indicator] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
-  cursor: pointer;
+  white-space: nowrap;
+  cursor: default;
 }
 .header-actions [data-indicator][data-style="active"] {
   color: var(--color-primary);
-}
-/* Separator when indicators appear alongside theme toggle */
-.header-actions [data-indicator] + .theme-toggle,
-.header-actions .theme-toggle + [data-indicator] {
-  border-left: 0.5px solid rgba(128, 128, 128, 0.25);
-  margin-left: var(--space-xs);
-  padding-left: var(--space-sm);
 }
 /* ---- Theme toggle button ---- */
 .theme-toggle {
@@ -1611,6 +1673,12 @@ body.modal-overlay-active #modal_overlay {
   }
   .sidebar-overlay.active {
     display: block;
+  }
+}
+/* Hide status indicators on small screens */
+@media (max-width: 768px) {
+  #status-indicators {
+    display: none !important;
   }
 }
 /* Mobile: tighter spacing */

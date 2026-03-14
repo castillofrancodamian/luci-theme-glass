@@ -400,6 +400,63 @@
   z-index: 1;
 }
 
+/* ---- Status indicators (center of header) ---- */
+#status-indicators {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px var(--space-md);
+  .header-glass-pill();
+
+  &:empty {
+    display: none;
+  }
+
+  [data-indicator] {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    cursor: default;
+    transition: color 0.3s ease;
+
+    .indicator-icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      opacity: 0.6;
+      transition: color 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* Level colors — neutral by default, color only when noteworthy */
+    &[data-level="warn"] {
+      color: #FF9500;
+      .indicator-icon { opacity: 0.85; }
+    }
+    &[data-level="crit"] {
+      color: #FF3B30;
+      .indicator-icon { opacity: 0.9; }
+    }
+    &[data-level="active"] {
+      color: #007AFF;
+      .indicator-icon { opacity: 0.8; }
+    }
+    &[data-level="busy"] {
+      color: #AF52DE;
+      .indicator-icon { opacity: 0.85; }
+    }
+  }
+
+  [data-indicator] + [data-indicator] {
+    border-left: 0.5px solid rgba(128, 128, 128, 0.25);
+    padding-left: var(--space-sm);
+  }
+}
+
 /* ---- Glass pill badges (title + indicators) ---- */
 .header-glass-pill() {
   border-radius: var(--radius-md);
@@ -446,23 +503,19 @@
   }
 
   [data-indicator] {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     color: var(--color-text-secondary);
-    cursor: pointer;
+    white-space: nowrap;
+    cursor: default;
 
     &[data-style="active"] {
       color: var(--color-primary);
     }
   }
-}
-
-/* Separator when indicators appear alongside theme toggle */
-.header-actions [data-indicator] + .theme-toggle,
-.header-actions .theme-toggle + [data-indicator] {
-  border-left: 0.5px solid rgba(128, 128, 128, 0.25);
-  margin-left: var(--space-xs);
-  padding-left: var(--space-sm);
 }
 
 /* ---- Theme toggle button ---- */
