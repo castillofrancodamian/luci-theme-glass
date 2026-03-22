@@ -12,6 +12,9 @@ docs/
 *.swo
 *~
 
+# Signing keys (secret key is in GitHub Secrets, NEVER commit)
+keys/
+
 # Build output
 dist/
 
