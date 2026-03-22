@@ -56,7 +56,7 @@ A glassmorphism theme for OpenWrt LuCI, inspired by Apple's visionOS and macOS. 
 
 ## Installation
 
-### From package repository (auto-update)
+### From package repository (auto-update, opkg only)
 
 Add the repository to get updates via the package manager:
 
@@ -69,7 +69,7 @@ opkg install luci-theme-glass
 
 **OpenWrt 25.12+ (apk):**
 ```sh
-echo "https://rchen14b.github.io/luci-theme-glass/apk" > /etc/apk/repositories.d/glass.list
+echo "https://rchen14b.github.io/luci-theme-glass/apk/packages.adb" > /etc/apk/repositories.d/glass.list
 apk update --allow-untrusted
 apk add --allow-untrusted luci-theme-glass
 ```
