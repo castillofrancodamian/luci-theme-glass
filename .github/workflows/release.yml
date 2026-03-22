@@ -48,6 +48,8 @@ jobs:
           echo "" >> Packages
 
           gzip -k Packages
+          # Empty sig file to suppress opkg "Packages.sig not found" warning
+          touch Packages.sig
           rm -rf _tmp
 
       - name: Generate apk packages.adb index
@@ -86,6 +88,7 @@ jobs:
           cp "/tmp/dist-save/$IPK" packages/
           cp /tmp/dist-save/Packages packages/
           cp /tmp/dist-save/Packages.gz packages/
+          cp /tmp/dist-save/Packages.sig packages/
           # Remove old versions
           find packages -name '*.ipk' ! -name "$IPK" -delete
 
@@ -112,17 +115,26 @@ jobs:
       - name: Deploy Pages
         uses: actions/deploy-pages@v4
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VER="${{ steps.version.outputs.version }}"
+          IPK="/tmp/dist-save/${{ steps.version.outputs.ipk }}"
+          APK="/tmp/dist-save/${{ steps.version.outputs.apk }}"
 
-          # Extract release notes from the tag's commit message (skip first line)
-          NOTES=$(git log -1 --format='%b' "v${VER}" 2>/dev/null || echo "")
+          # Check if release already exists (preserve manually edited notes)
+          if gh release view "v${VER}" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release v${VER} exists — uploading assets only (preserving notes)"
+            gh release upload "v${VER}" "$IPK" "$APK" --clobber
+          else
+            echo "Creating new release v${VER}"
+            # Extract notes from commit body
+            git checkout "$GITHUB_SHA" -- 2>/dev/null || true
+            BODY=$(git log -1 --format='%b' "$GITHUB_SHA" 2>/dev/null || echo "")
 
-          # Add install instructions
-          NOTES="${NOTES}
+            cat > /tmp/release-notes.md <<NOTES_EOF
+          ${BODY}
 
           ## Install
 
@@ -130,14 +142,14 @@ jobs:
 
           **opkg (OpenWrt 24.10 and earlier):**
           \`\`\`sh
-          echo \"src/gz glass https://rchen14b.github.io/luci-theme-glass/packages\" >> /etc/opkg/customfeeds.conf
+          echo "src/gz glass https://rchen14b.github.io/luci-theme-glass/packages" >> /etc/opkg/customfeeds.conf
           opkg update
           opkg install luci-theme-glass
           \`\`\`
 
           **apk (OpenWrt 25.12+):**
           \`\`\`sh
-          echo \"https://rchen14b.github.io/luci-theme-glass/apk\" > /etc/apk/repositories.d/glass.list
+          echo "https://rchen14b.github.io/luci-theme-glass/apk/packages.adb" > /etc/apk/repositories.d/glass.list
           apk update --allow-untrusted
           apk add --allow-untrusted luci-theme-glass
           \`\`\`
@@ -145,10 +157,9 @@ jobs:
           ### From release (manual)
           - **apk**: \`apk add --allow-untrusted luci-theme-glass-${VER}-r1.apk\`
           - **opkg**: \`opkg install luci-theme-glass_${VER}-1_all.ipk\`
-          "
+          NOTES_EOF
 
-          gh release create "v${VER}" \
-            "/tmp/dist-save/${{ steps.version.outputs.ipk }}" \
-            "/tmp/dist-save/${{ steps.version.outputs.apk }}" \
-            --title "v${VER}" \
-            --notes "$NOTES"
+            gh release create "v${VER}" "$IPK" "$APK" \
+              --title "v${VER}" \
+              --notes-file /tmp/release-notes.md
+          fi
