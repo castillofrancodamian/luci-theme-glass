@@ -48,8 +48,6 @@ jobs:
           echo "" >> Packages
 
           gzip -k Packages
-          # Empty sig file to suppress opkg "Packages.sig not found" warning
-          touch Packages.sig
           rm -rf _tmp
 
       - name: Generate apk packages.adb index
@@ -88,7 +86,8 @@ jobs:
           cp "/tmp/dist-save/$IPK" packages/
           cp /tmp/dist-save/Packages packages/
           cp /tmp/dist-save/Packages.gz packages/
-          cp /tmp/dist-save/Packages.sig packages/
+          # Remove any stale sig file — invalid sig causes opkg to reject the list
+          rm -f packages/Packages.sig
           # Remove old versions
           find packages -name '*.ipk' ! -name "$IPK" -delete
 
