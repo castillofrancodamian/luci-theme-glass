@@ -106,8 +106,38 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VER="${{ steps.version.outputs.version }}"
+
+          # Extract release notes from the tag's commit message (skip first line)
+          NOTES=$(git log -1 --format='%b' "v${VER}" 2>/dev/null || echo "")
+
+          # Add install instructions
+          NOTES="${NOTES}
+
+          ## Install
+
+          ### From package repository (auto-update)
+
+          **opkg (OpenWrt 24.10 and earlier):**
+          \`\`\`sh
+          echo \"src/gz glass https://rchen14b.github.io/luci-theme-glass/packages\" >> /etc/opkg/customfeeds.conf
+          opkg update
+          opkg install luci-theme-glass
+          \`\`\`
+
+          **apk (OpenWrt 25.12+):**
+          \`\`\`sh
+          echo \"https://rchen14b.github.io/luci-theme-glass/apk\" > /etc/apk/repositories.d/glass.list
+          apk update --allow-untrusted
+          apk add --allow-untrusted luci-theme-glass
+          \`\`\`
+
+          ### From release (manual)
+          - **apk**: \`apk add --allow-untrusted luci-theme-glass-${VER}-r1.apk\`
+          - **opkg**: \`opkg install luci-theme-glass_${VER}-1_all.ipk\`
+          "
+
           gh release create "v${VER}" \
             "/tmp/dist-save/${{ steps.version.outputs.ipk }}" \
             "/tmp/dist-save/${{ steps.version.outputs.apk }}" \
             --title "v${VER}" \
-            --generate-notes
+            --notes "$NOTES"
