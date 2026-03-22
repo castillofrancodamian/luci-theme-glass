@@ -52,6 +52,7 @@ jobs:
           gzip -k Packages
 
           # Sign with usign key (signify-openbsd is compatible)
+          # opkg verifies sig against the uncompressed Packages file saved to /var/opkg-lists/
           sudo apt-get install -y -qq signify-openbsd >/dev/null 2>&1
           echo "$USIGN_SEC_KEY" > _tmp/glass.sec
           signify-openbsd -S -s _tmp/glass.sec -m Packages -x Packages.sig
