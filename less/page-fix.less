@@ -84,16 +84,10 @@
 
 /* ---- Port status grid (29_ports.js) ---- */
 div[style*="display:grid;grid-template-columns:repeat"] {
-  display: flex !important;
-  flex-wrap: wrap;
-  justify-content: space-evenly;
-  gap: var(--space-md);
+  gap: var(--space-md) !important;
   margin-bottom: var(--space-lg) !important;
 
   > .ifacebox {
-    flex: 0 0 auto;
-    min-width: 80px !important;
-    max-width: 110px !important;
     margin: 0 !important;
     padding: 0 !important;
     text-align: center;
@@ -132,7 +126,6 @@ div[style*="display:grid;grid-template-columns:repeat"] {
       img {
         width: 28px;
         height: 28px;
-        display: block;
         margin: 2px auto;
       }
     }
@@ -191,6 +184,8 @@ div[style*="display:grid;grid-template-columns:repeat"] {
   align-items: center;
   gap: var(--space-xs);
   padding: 2px var(--space-sm);
+  margin-right: 0.4em;
+  min-width: max-content;
   background: rgba(255, 255, 255, 0.40);
   backdrop-filter: blur(8px) saturate(180%);
   -webkit-backdrop-filter: blur(8px) saturate(180%);
@@ -278,6 +273,52 @@ pre {
   overflow-x: auto;
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
+}
+
+/* Flatten pre inside modals — avoid box-in-box */
+.modal pre {
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: var(--space-sm) 0;
+}
+
+/* Native progress element (package manager, etc.) */
+progress {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border: none;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.06);
+
+  &::-webkit-progress-bar {
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: var(--radius-full);
+  }
+
+  &::-webkit-progress-value {
+    background: linear-gradient(
+      135deg,
+      rgba(var(--color-primary-rgb), 0.75) 0%,
+      rgba(var(--color-primary-rgb), 0.60) 50%,
+      rgba(var(--color-primary-rgb), 0.70) 100%
+    );
+    border-radius: var(--radius-full);
+  }
+
+  &::-moz-progress-bar {
+    background: linear-gradient(
+      135deg,
+      rgba(var(--color-primary-rgb), 0.75) 0%,
+      rgba(var(--color-primary-rgb), 0.60) 50%,
+      rgba(var(--color-primary-rgb), 0.70) 100%
+    );
+    border-radius: var(--radius-full);
+  }
 }
 
 /* ACL/UBUS error page styling */

@@ -8,6 +8,7 @@
   import { cursor } from 'uci';
   import { getuid, getspnam } from 'luci.core';
 
+  const glass_version = trim(readfile('/usr/share/ucode/luci/template/themes/glass/version')) ?? '?';
   const boardinfo = ubus.call('system', 'board');
   const hostname = striptags(boardinfo?.hostname ?? 'OpenWrt');
 
@@ -78,6 +79,23 @@
       --glass-blur: {{ glass_blur }}px;
       --glass-bg: rgba(255, 255, 255, {{ glass_transparency }});
     }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-primary: {{ glass_dark_primary }};
+        --glass-blur: {{ glass_blur_dark }}px;
+        --glass-bg: rgba(38, 38, 42, {{ glass_transparency_dark }});
+      }
+    }
+    [data-theme="dark"] {
+      --color-primary: {{ glass_dark_primary }};
+      --glass-blur: {{ glass_blur_dark }}px;
+      --glass-bg: rgba(38, 38, 42, {{ glass_transparency_dark }});
+    }
+    [data-theme="light"] {
+      --color-primary: {{ glass_primary }};
+      --glass-blur: {{ glass_blur }}px;
+      --glass-bg: rgba(255, 255, 255, {{ glass_transparency }});
+    }
   </style>
   {% endif %}
   <script>
@@ -128,7 +146,7 @@
   </nav>
 
   <div class="sidebar-footer">
-    <span class="sidebar-version">GlassTheme v1.0.5</span>
+    <span class="sidebar-version">GlassTheme v{{ glass_version }}</span>
   </div>
 </aside>
 

@@ -9,6 +9,12 @@
   padding: var(--space-xl);
   margin-bottom: var(--space-xl);
   position: relative;
+  overflow-x: auto;
+
+  /* Lift section above siblings when a dropdown is open inside it */
+  &:has(.cbi-dropdown[open]) {
+    z-index: var(--z-dropdown);
+  }
 
   /* Nested sections — flatten (no extra box/padding) */
   .cbi-section {
@@ -21,6 +27,24 @@
     box-shadow: none;
     border-radius: 0;
   }
+}
+
+/* Allow dropdowns to escape stacking contexts created by backdrop-filter.
+   Temporarily remove glass effects on the section and force overflow visible
+   on all ancestors up to the section. */
+.cbi-section:has(.cbi-dropdown[open]) {
+  z-index: var(--z-modal);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
+}
+
+.cbi-section:has(.cbi-dropdown[open]) .table,
+.cbi-section:has(.cbi-dropdown[open]) .tr,
+.cbi-section:has(.cbi-dropdown[open]) .td,
+.cbi-section:has(.cbi-dropdown[open]) .cbi-value,
+.cbi-section:has(.cbi-dropdown[open]) .cbi-value-field {
+  overflow: visible !important;
 }
 
 .cbi-section-descr {
@@ -97,8 +121,13 @@
 .cbi-map-descr,
 .cbi-map > h2,
 #view > h2,
-#view > h2 + p,
 #maincontent > h2 {
+  display: none;
+}
+
+/* Hide descriptions only when moved to header tooltip (data-moved set by footer.ut JS) */
+.cbi-map-descr[data-moved],
+#view > h2 + [data-moved] {
   display: none;
 }
 
@@ -433,9 +462,144 @@ table.cbi-section-table {
       border-bottom: none;
     }
 
+    /* Action button cells — right-aligned, equal-width buttons */
+    td:last-child:has(.cbi-button),
+    .td:last-child:has(.cbi-button) {
+      text-align: right;
+      white-space: nowrap;
+
+      .cbi-button {
+        min-width: 6rem;
+        width: 6rem;
+        text-align: center;
+      }
+    }
+
     &:hover td,
     &:hover .td {
       background: rgba(0, 0, 0, 0.02);
+    }
+  }
+}
+
+/* ---- CBI Dynamic List (IP addresses, DNS servers, etc.) ---- */
+.cbi-dynlist {
+  line-height: 1.3;
+  flex-direction: column;
+  min-height: 30px;
+  cursor: text;
+  gap: 10px;
+
+  > .item {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    position: relative;
+    max-width: 25rem;
+    pointer-events: none;
+    color: var(--color-text-secondary);
+    outline: 0;
+
+    /* Remove button (×) */
+    &::after {
+      content: "\00D7";
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem !important;
+      height: 2.5rem;
+      margin: 0;
+      font-weight: normal;
+      font-size: 1rem;
+      line-height: 1.5rem;
+      color: var(--color-danger);
+      border: 0.5px solid rgba(255, 59, 48, 0.25);
+      border-left: none;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      outline: 0;
+      background: rgba(255, 59, 48, 0.08);
+      background-image: none;
+      box-shadow: none;
+      box-sizing: border-box;
+      transition: background 0.2s;
+    }
+
+    &::after:hover {
+      background: rgba(255, 59, 48, 0.18);
+    }
+
+    > span {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      box-sizing: border-box;
+      min-width: 15.5rem;
+      width: 15.5rem;
+      height: 2.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: text;
+      white-space: nowrap;
+      word-break: break-word;
+      line-height: 1.5em;
+      color: var(--color-text-primary);
+      border: 0.5px solid var(--color-border);
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+      border-right: none;
+      outline: 0;
+      background: var(--color-bg-elevated);
+      box-shadow: none;
+    }
+  }
+
+  > .add-item {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    min-width: 15.5rem;
+    flex-wrap: nowrap;
+
+    input {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      box-sizing: border-box;
+      min-width: 15.5rem;
+      width: 15.5rem;
+      white-space: nowrap;
+      font-size: var(--font-size-sm);
+      line-height: 1.5rem;
+      color: var(--color-text-primary);
+      border: 0.5px solid var(--color-border);
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+      border-right-width: 0;
+      outline: 0;
+      background: var(--color-bg-elevated);
+      box-shadow: none;
+    }
+
+    .cbi-button {
+      display: flex;
+      width: auto !important;
+      padding-left: 0.8rem;
+      padding-right: 0.8rem;
+      margin-left: 0;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      outline: 0;
+      box-shadow: none;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    .cbi-button-add {
+      width: 2.5rem !important;
+      padding: 0.5rem 0 !important;
+      font-weight: normal;
+      font-size: 1.2rem;
+      color: #fff;
+      background: var(--color-primary);
+      border: 1px solid var(--color-primary);
     }
   }
 }
@@ -460,8 +624,14 @@ table.cbi-section-table {
       display: none;
       padding: var(--space-sm) var(--space-md);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       min-height: auto;
       line-height: 1.4;
+
+      .hide-close {
+        display: none;
+      }
 
       &[display] {
         display: flex;
@@ -488,27 +658,41 @@ table.cbi-section-table {
   }
 
   /* Opened dropdown list */
+  &[open] {
+    position: relative;
+    z-index: var(--z-modal);
+  }
+
   &[open] > ul.dropdown {
-    .glass-frosted();
     border-radius: var(--radius-md);
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: var(--z-dropdown);
+    z-index: var(--z-modal);
     min-width: 100%;
     max-height: 250px;
     overflow-y: auto;
     margin-top: var(--space-xs);
     display: block;
     color: var(--color-text);
+    background: var(--color-bg-elevated, #f5f5f7);
+    border: 0.5px solid var(--color-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
 
     > li {
       display: flex;
       align-items: center;
-      padding: var(--space-sm) var(--space-md);
+      padding: 0.5rem 0.75rem;
       cursor: pointer;
       color: var(--color-text);
       transition: background var(--transition-fast);
+      border-bottom: 0.5px solid var(--color-border);
+      white-space: normal;
+      line-height: 1.4;
+
+      &:last-child {
+        border-bottom: none;
+      }
 
       &:hover {
         background: rgba(0, 0, 0, 0.04);
@@ -517,6 +701,14 @@ table.cbi-section-table {
       &[selected] {
         color: var(--color-primary);
         font-weight: var(--font-weight-medium);
+      }
+
+      .hide-open {
+        display: none;
+      }
+
+      .hide-close {
+        display: initial;
       }
     }
   }
@@ -551,10 +743,12 @@ table.cbi-section-table {
 /* ---- Tabs ---- */
 .cbi-tabmenu {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-xs);
   list-style: none;
   margin: 0 0 var(--space-xl);
   padding: var(--space-xs);
+  padding-left: var(--space-xs);
   border-radius: var(--radius-md);
   /* Glass tab bar — match header/sub-nav pattern */
   background-image: linear-gradient(
@@ -605,20 +799,13 @@ table.cbi-section-table {
   }
 }
 
-/* Tab content panels — LuCI uses data-tab-title / data-tab-active attributes */
-[data-tab-title] {
+/* Tab content panels — hide inactive tabs.
+   Use [data-tab] selector (tab panels have data-tab + data-tab-title).
+   Individual form fields may have data-tab-title only — don't hide those.
+   IMPORTANT: Do NOT use !important here — LuCI's dependency system needs
+   to evaluate fields in all tabs during page load to set proper visibility. */
+[data-tab][data-tab-title]:not([data-tab-active="true"]) {
   display: none;
-  height: 0;
-  opacity: 0;
-  overflow: hidden;
-}
-
-[data-tab-active="true"] {
-  display: block;
-  height: auto;
-  opacity: 1;
-  overflow: visible;
-  transition: opacity var(--transition-normal);
 }
 
 /* ---- Alerts / Messages ---- */
@@ -797,4 +984,122 @@ body.modal-overlay-active #modal_overlay {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ── UCI Changes Dialog (Config / Changes) ── */
+.uci-dialog .cbi-section {
+  padding: 0;
+  margin: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+.uci-change-legend {
+  padding: 10px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.uci-change-legend-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+
+  > ins, > del, > var {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 6px;
+    padding: 0;
+    text-decoration: none;
+    font-style: normal;
+    overflow: hidden;
+    /* hide text content inside the color swatch */
+    text-indent: -9999px;
+  }
+
+  > ins {
+    background-color: rgba(52, 199, 89, 0.25);
+    border: 1px solid rgba(52, 199, 89, 0.5);
+  }
+
+  > del {
+    background-color: rgba(255, 59, 48, 0.25);
+    border: 1px solid rgba(255, 59, 48, 0.5);
+  }
+
+  > var {
+    background-color: rgba(90, 200, 250, 0.20);
+    border: 1px solid rgba(90, 200, 250, 0.4);
+  }
+}
+
+.uci-change-list {
+  font-family: inherit;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+
+  ins, del, var {
+    display: block;
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-style: normal;
+    font-size: var(--font-size-sm);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  ins {
+    background-color: rgba(52, 199, 89, 0.10);
+    border: 0.5px solid rgba(52, 199, 89, 0.30);
+    color: var(--color-success);
+  }
+
+  del {
+    background-color: rgba(255, 59, 48, 0.10);
+    border: 0.5px solid rgba(255, 59, 48, 0.30);
+    color: var(--color-danger);
+  }
+
+  var {
+    background-color: rgba(90, 200, 250, 0.08);
+    border: 0.5px solid rgba(90, 200, 250, 0.20);
+    color: var(--color-info);
+  }
+
+  /* Nested ins/del inside var (inline changed values) */
+  var ins, var del {
+    display: inline;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+  }
+
+  var ins {
+    color: var(--color-success);
+  }
+
+  var del {
+    color: var(--color-danger);
+  }
+}
+
+/* Button row inside uci-dialog */
+.uci-change-list + .right,
+.uci-dialog .right {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }

@@ -1,0 +1,109 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build packages
+        run: |
+          rm -f dist/*
+          bash build-pkg.sh
+
+      - name: Extract version
+        id: version
+        run: |
+          VER=$(tr -d '[:space:]' < ucode/template/themes/glass/version)
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "ipk=luci-theme-glass_${VER}-1_all.ipk" >> "$GITHUB_OUTPUT"
+          echo "apk=luci-theme-glass-${VER}-r1.apk" >> "$GITHUB_OUTPUT"
+
+      - name: Generate opkg Packages index
+        run: |
+          cd dist
+          IPK="${{ steps.version.outputs.ipk }}"
+
+          # Extract control info from IPK
+          mkdir -p _tmp
+          tar xzf "$IPK" -C _tmp ./control.tar.gz
+          tar xzf _tmp/control.tar.gz -C _tmp ./control
+
+          # Build Packages index
+          cat _tmp/control > Packages
+          echo "Filename: $IPK" >> Packages
+          echo "Size: $(stat -c%s "$IPK")" >> Packages
+          echo "SHA256sum: $(sha256sum "$IPK" | cut -d' ' -f1)" >> Packages
+          echo "" >> Packages
+
+          gzip -k Packages
+          rm -rf _tmp
+
+      - name: Generate apk APKINDEX
+        run: |
+          APK="${{ steps.version.outputs.apk }}"
+          mkdir -p dist/apk_staging
+          cp "dist/$APK" dist/apk_staging/
+
+          docker run --rm \
+            -v "$PWD/dist/apk_staging:/repo" \
+            alpine:latest sh -c "
+              cd /repo && apk index -o APKINDEX.tar.gz *.apk 2>&1 || true
+            "
+
+      - name: Deploy package repo to gh-pages
+        run: |
+          VER="${{ steps.version.outputs.version }}"
+          IPK="${{ steps.version.outputs.ipk }}"
+          APK="${{ steps.version.outputs.apk }}"
+
+          # Save artifacts before branch switch
+          cp -r dist /tmp/dist-save
+
+          # Configure git
+          git config user.name "Ryan Chen"
+          git config user.email "rchen14b@gmail.com"
+
+          # Checkout gh-pages
+          git fetch origin gh-pages
+          git checkout gh-pages
+
+          # opkg feed
+          mkdir -p packages
+          cp "/tmp/dist-save/$IPK" packages/
+          cp /tmp/dist-save/Packages packages/
+          cp /tmp/dist-save/Packages.gz packages/
+          # Remove old versions
+          find packages -name '*.ipk' ! -name "$IPK" -delete
+
+          # apk feed
+          mkdir -p apk/noarch
+          cp "/tmp/dist-save/$APK" apk/noarch/
+          cp /tmp/dist-save/apk_staging/APKINDEX.tar.gz apk/noarch/
+          # Remove old versions
+          find apk/noarch -name '*.apk' ! -name "$APK" -delete
+
+          # Commit and push
+          git add packages/ apk/
+          git commit -m "Update package repo: v${VER}" || echo "No changes"
+          git push origin gh-pages
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VER="${{ steps.version.outputs.version }}"
+          gh release create "v${VER}" \
+            "/tmp/dist-save/${{ steps.version.outputs.ipk }}" \
+            "/tmp/dist-save/${{ steps.version.outputs.apk }}" \
+            --title "v${VER}" \
+            --generate-notes

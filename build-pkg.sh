@@ -2,7 +2,7 @@
 set -e
 
 PKG_NAME="luci-theme-glass"
-PKG_VERSION="1.0.5"
+PKG_VERSION="$(tr -d '[:space:]' < "$(dirname "$0")/ucode/template/themes/glass/version")"
 PKG_RELEASE="1"
 MAINTAINER="Ryan Chen <rchen14b@gmail.com>"
 DESCRIPTION="Glass - Apple-inspired glassmorphism theme for LuCI"
@@ -22,17 +22,25 @@ echo "==> Preparing file tree..."
 DATA_DIR="$WORK_DIR/data"
 mkdir -p "$DATA_DIR/www/luci-static/glass"
 mkdir -p "$DATA_DIR/www/luci-static/resources"
+mkdir -p "$DATA_DIR/www/luci-static/resources/view/system"
 mkdir -p "$DATA_DIR/usr/share/ucode/luci/template/themes/glass"
 mkdir -p "$DATA_DIR/usr/share/rpcd/acl.d"
+mkdir -p "$DATA_DIR/usr/share/luci/menu.d"
 mkdir -p "$DATA_DIR/etc/uci-defaults"
+mkdir -p "$DATA_DIR/etc/config"
 
 cp -r htdocs/luci-static/glass/css "$DATA_DIR/www/luci-static/glass/"
 cp -r htdocs/luci-static/glass/img "$DATA_DIR/www/luci-static/glass/"
 mkdir -p "$DATA_DIR/www/luci-static/glass/background"
 cp htdocs/luci-static/resources/menu-glass.js "$DATA_DIR/www/luci-static/resources/"
+cp htdocs/luci-static/resources/status-glass.js "$DATA_DIR/www/luci-static/resources/"
+cp htdocs/luci-static/resources/view/system/glass.js "$DATA_DIR/www/luci-static/resources/view/system/"
 cp ucode/template/themes/glass/*.ut "$DATA_DIR/usr/share/ucode/luci/template/themes/glass/"
+cp ucode/template/themes/glass/version "$DATA_DIR/usr/share/ucode/luci/template/themes/glass/"
 cp root/usr/share/rpcd/acl.d/luci-theme-glass.json "$DATA_DIR/usr/share/rpcd/acl.d/"
+cp root/usr/share/luci/menu.d/luci-theme-glass.json "$DATA_DIR/usr/share/luci/menu.d/"
 cp root/etc/uci-defaults/30_luci-theme-glass "$DATA_DIR/etc/uci-defaults/"
+cp root/etc/config/glass "$DATA_DIR/etc/config/"
 
 INSTALLED_SIZE=$(du -sk "$DATA_DIR" | cut -f1)
 INSTALLED_BYTES=$((INSTALLED_SIZE * 1024))

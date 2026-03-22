@@ -52,7 +52,10 @@ return baseclass.extend({
 		el.appendChild(this.makeIcon(name));
 		var val = document.createElement('span');
 		val.className = 'indicator-value';
-		val.textContent = '--';
+		/* Restore last known value from session to avoid flash of "--" on page nav */
+		var cached = null;
+		try { cached = sessionStorage.getItem('glass-status-' + name); } catch(e) {}
+		val.textContent = cached || '--';
 		el.appendChild(val);
 		return el;
 	},
@@ -158,6 +161,7 @@ return baseclass.extend({
 		if (info.load) {
 			var load = (info.load[0] / 65536).toFixed(2);
 			this.cpuEl.querySelector('.indicator-value').textContent = load;
+			try { sessionStorage.setItem('glass-status-cpu', load); } catch(e) {}
 			var load5 = (info.load[1] / 65536).toFixed(2);
 			var load15 = (info.load[2] / 65536).toFixed(2);
 			this.cpuEl.title = 'Load average: ' + load + ' / ' + load5 + ' / ' + load15 + ' (1 / 5 / 15 min)';
@@ -172,6 +176,7 @@ return baseclass.extend({
 			var used = total - avail;
 			var pct = (used / total * 100).toFixed(0);
 			this.ramEl.querySelector('.indicator-value').textContent = pct + '%';
+			try { sessionStorage.setItem('glass-status-ram', pct + '%'); } catch(e) {}
 			this.ramEl.title = 'RAM: ' + this.formatBytes(used) + ' / ' + this.formatBytes(total) + ' (' + pct + '% used)';
 
 			var level = pct < 60 ? 'ok' : pct < 85 ? 'warn' : 'crit';
@@ -180,6 +185,7 @@ return baseclass.extend({
 
 		if (info.uptime) {
 			this.uptimeEl.querySelector('.indicator-value').textContent = this.formatUptime(info.uptime);
+			try { sessionStorage.setItem('glass-status-uptime', this.formatUptime(info.uptime)); } catch(e) {}
 			this.uptimeEl.title = 'Uptime: ' + this.formatUptimeFull(info.uptime);
 		}
 	},
@@ -198,8 +204,9 @@ return baseclass.extend({
 				var txSpeed = (tx - this.prevStats.tx) / dt;
 				if (rxSpeed < 0) rxSpeed = 0;
 				if (txSpeed < 0) txSpeed = 0;
-				this.netEl.querySelector('.indicator-value').textContent =
-					'\u2193' + this.formatSpeed(rxSpeed) + ' \u2191' + this.formatSpeed(txSpeed);
+				var netText = '\u2193' + this.formatSpeed(rxSpeed) + ' \u2191' + this.formatSpeed(txSpeed);
+				this.netEl.querySelector('.indicator-value').textContent = netText;
+				try { sessionStorage.setItem('glass-status-net', netText); } catch(e) {}
 				var tip = (this.netLabel || this.netDevice) + ': \u2193 ' + this.formatSpeedFull(rxSpeed) + ' / \u2191 ' + this.formatSpeedFull(txSpeed);
 				if (this.linkSpeed)
 					tip += ' (Link: ' + (this.linkSpeed >= 1000 ? (this.linkSpeed / 1000) + ' Gbps' : this.linkSpeed + ' Mbps') + ')';

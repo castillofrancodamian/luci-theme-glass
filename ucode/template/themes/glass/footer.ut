@@ -1,11 +1,21 @@
 {# luci-theme-glass — Main page footer template #}
+{%
+  import { readfile, access } from 'fs';
+  import { cursor } from 'uci';
+  const glass_version = trim(readfile('/usr/share/ucode/luci/template/themes/glass/version')) ?? '?';
+  let glass_status_bar = '1';
+  let _cfg = cursor();
+  if (access('/etc/config/glass')) {
+    glass_status_bar = _cfg.get_first('glass', 'global', 'status_bar') ?? '1';
+  }
+%}
 {% if (!blank_page): %}
     </div>
   </div>
 </main>
 
 <footer class="glass-footer">
-  <span>GlassTheme v1.0.5</span>
+  <span>GlassTheme v{{ glass_version }}</span>
   <span class="footer-sep">|</span>
   <a href="https://github.com/openwrt/luci" target="_blank">{{ version.luciname }} ({{ version.luciversion }})</a>
   <span class="footer-sep">|</span>
@@ -15,7 +25,9 @@
 <script src="{{ resource }}/luci.js"></script>
 <script>
   L.require('menu-glass');
+{% if (glass_status_bar == '1'): %}
   L.require('status-glass');
+{% endif %}
 
   if (history.scrollRestoration) history.scrollRestoration = 'manual';
 
@@ -79,11 +91,7 @@
       /* Attach page description as tooltip on header title */
       if (headerTitle && !headerTitle.title) {
         var descr = content.querySelector('.cbi-map-descr');
-        if (!descr) {
-          var viewH2 = content.querySelector('#view > h2');
-          if (viewH2) descr = viewH2.nextElementSibling;
-        }
-        if (descr && descr.tagName && !descr.dataset.moved) {
+        if (descr && !descr.dataset.moved) {
           descr.dataset.moved = '1';
           headerTitle.title = descr.textContent.trim();
         }
@@ -98,35 +106,11 @@
       var allTabmenus = content.querySelectorAll('.cbi-tabmenu');
       if (allTabmenus.length === 0) return;
 
-      /* Filter: exclude tabmenus nested inside a tab panel whose parent
-         section already has a multi-tab tabmenu (e.g. DNS Records sub-tabs).
-         Include tabmenus inside single-tab wrappers (e.g. Firewall). */
-      function isDeeplyNested(ul) {
-        var tabbed = ul.closest('.cbi-section-node-tabbed');
-        if (!tabbed) return false;
-        var parent = tabbed.parentElement;
-        if (!parent) return false;
-        /* Check if a sibling .cbi-tabmenu in the same section has 2+ visible tabs */
-        var kids = parent.children;
-        for (var j = 0; j < kids.length; j++) {
-          if (kids[j].classList && kids[j].classList.contains('cbi-tabmenu')) {
-            var visible = 0;
-            var lis = kids[j].querySelectorAll('li');
-            for (var k = 0; k < lis.length; k++) {
-              if (lis[k].style.display !== 'none') visible++;
-            }
-            if (visible >= 2) return true;
-          }
-        }
-        return false;
-      }
-      var topTabmenus = [];
-      for (var i = 0; i < allTabmenus.length; i++) {
-        if (!isDeeplyNested(allTabmenus[i])) {
-          topTabmenus.push(allTabmenus[i]);
-        }
-      }
-      if (topTabmenus.length === 0) return;
+      /* Only move the first CBI tabmenu to sub-nav.
+         Any deeper tabmenus (e.g. DNS Records sub-tabs, dnsmasq section tabs)
+         stay in-content with glass styling. */
+      var topTabmenus = [allTabmenus[0]];
+      if (!topTabmenus[0]) return;
 
       /* Skip rebuild if we're in the middle of a tab click */
       if (headerSub._switching) return;

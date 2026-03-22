@@ -298,6 +298,11 @@ return baseclass.extend({
 		if (children.length == 0)
 			return E([]);
 
+		/* Clear any CBI tabs that footer.ut added before menu loaded */
+		container.innerHTML = '';
+		container.classList.remove('active');
+		document.body.classList.remove('has-sub-nav');
+
 		for (var i = 0; i < children.length; i++) {
 			var child = children[i];
 			var isActive = L.env.dispatchpath[3 + (level || 0)] == child.name;
@@ -317,7 +322,6 @@ return baseclass.extend({
 		/* Add sliding selector */
 		this.addTabSlider(container, true);
 
-		if (activeNode)
-			this.renderTabMenu(activeNode, url + '/' + activeNode.name, (level || 0) + 1);
+		/* Do NOT recurse — deeper menu-tree levels stay in-content as CBI tabmenus */
 	}
 });
