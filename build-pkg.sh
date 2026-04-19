@@ -29,6 +29,7 @@ mkdir -p "$DATA_DIR/usr/share/luci/menu.d"
 mkdir -p "$DATA_DIR/etc/uci-defaults"
 mkdir -p "$DATA_DIR/etc/config"
 mkdir -p "$DATA_DIR/etc/opkg/keys"
+mkdir -p "$DATA_DIR/etc/apk/keys"
 
 cp -r htdocs/luci-static/glass/css "$DATA_DIR/www/luci-static/glass/"
 cp -r htdocs/luci-static/glass/img "$DATA_DIR/www/luci-static/glass/"
@@ -43,6 +44,7 @@ cp root/usr/share/luci/menu.d/luci-theme-glass.json "$DATA_DIR/usr/share/luci/me
 cp root/etc/uci-defaults/30_luci-theme-glass "$DATA_DIR/etc/uci-defaults/"
 cp root/etc/config/glass "$DATA_DIR/etc/config/"
 cp root/etc/opkg/keys/* "$DATA_DIR/etc/opkg/keys/" 2>/dev/null || true
+cp root/etc/apk/keys/* "$DATA_DIR/etc/apk/keys/" 2>/dev/null || true
 
 INSTALLED_SIZE=$(du -sk "$DATA_DIR" | cut -f1)
 INSTALLED_BYTES=$((INSTALLED_SIZE * 1024))

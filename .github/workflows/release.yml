@@ -61,19 +61,33 @@ jobs:
 
           rm -rf _tmp
 
-      - name: Generate apk packages.adb index
+      - name: Generate and sign apk packages.adb index
+        env:
+          APK_SEC_KEY: ${{ secrets.APK_SEC_KEY }}
         run: |
           APK="${{ steps.version.outputs.apk }}"
           mkdir -p dist/apk_staging
           cp "dist/$APK" dist/apk_staging/
 
+          # Write RSA private key (name must match public key for apk to match)
+          echo "$APK_SEC_KEY" > dist/apk_staging/glass-apk.rsa
+          chmod 600 dist/apk_staging/glass-apk.rsa
+
+          # Generate and sign packages.adb using the same Alpine container
           docker run --rm \
             -v "$PWD/dist/apk_staging:/repo" \
             alpine:latest sh -c "
               cd /repo
-              apk mkndx --allow-untrusted -o packages.adb *.apk 2>&1 || \
-              echo 'WARN: apk mkndx failed'
+              apk mkndx --allow-untrusted \
+                --sign-key /repo/glass-apk.rsa \
+                -o packages.adb \
+                *.apk 2>&1
             "
+
+          # Remove private key from staging dir
+          rm -f dist/apk_staging/glass-apk.rsa
+
+          ls -la dist/apk_staging/
 
       - name: Deploy package repo to gh-pages
         run: |
@@ -158,9 +172,14 @@ jobs:
 
           **apk (OpenWrt 25.12+):**
           \`\`\`sh
+          # First install: fetch signing public key (one-time)
+          wget -O /etc/apk/keys/glass-apk.rsa.pub \
+            https://raw.githubusercontent.com/rchen14b/luci-theme-glass/main/root/etc/apk/keys/glass-apk.rsa.pub
+
+          # Add feed and install
           echo "https://rchen14b.github.io/luci-theme-glass/apk/packages.adb" > /etc/apk/repositories.d/glass.list
-          apk update --allow-untrusted
-          apk add --allow-untrusted luci-theme-glass
+          apk update
+          apk add luci-theme-glass
           \`\`\`
 
           ### From release (manual)
