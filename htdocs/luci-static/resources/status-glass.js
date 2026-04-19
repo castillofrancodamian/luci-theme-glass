@@ -1,6 +1,7 @@
 'use strict';
 'require baseclass';
 'require rpc';
+'require fs';
 
 var callSystemInfo = rpc.declare({
 	object: 'system',
@@ -26,14 +27,21 @@ return baseclass.extend({
 	netLabel: null,
 	netChecked: false,
 	linkSpeed: null,
+	numCores: 1,
 
 	__init__: function() {
+		var self = this;
+		/* Detect core count once so load average can be converted to %. */
+		L.resolveDefault(fs.read('/proc/cpuinfo'), '').then(function(text) {
+			var m = text.match(/^processor\s*:/gm);
+			self.numCores = (m && m.length) || 1;
+		});
 		this.setupIndicators();
 	},
 
 	icons: {
 		cpu:    '<svg xmlns="http://www.w3.org/2000/svg" class="indicator-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 9 4 4 7 11 10 2 13 9"/></svg>',
-		ram:    '<svg xmlns="http://www.w3.org/2000/svg" class="indicator-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="10" height="10" rx="1"/><line x1="5" y1="0" x2="5" y2="2"/><line x1="9" y1="0" x2="9" y2="2"/><line x1="5" y1="12" x2="5" y2="14"/><line x1="9" y1="12" x2="9" y2="14"/><line x1="0" y1="5" x2="2" y2="5"/><line x1="0" y1="9" x2="2" y2="9"/><line x1="12" y1="5" x2="14" y2="5"/><line x1="12" y1="9" x2="14" y2="9"/></svg>',
+		ram:    '<svg xmlns="http://www.w3.org/2000/svg" class="indicator-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3 H13 V10 H8 V9 H6 V10 H1 Z"/><rect x="2.2" y="4.5" width="2" height="3"/><rect x="6" y="4.5" width="2" height="3"/><rect x="9.8" y="4.5" width="2" height="3"/><line x1="2" y1="10" x2="2" y2="11.5"/><line x1="4" y1="10" x2="4" y2="11.5"/><line x1="10" y1="10" x2="10" y2="11.5"/><line x1="12" y1="10" x2="12" y2="11.5"/></svg>',
 		net:    '<svg xmlns="http://www.w3.org/2000/svg" class="indicator-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="1" x2="7" y2="13"/><polyline points="3 4 7 1 11 4"/><polyline points="3 10 7 13 11 10"/></svg>',
 		uptime: '<svg xmlns="http://www.w3.org/2000/svg" class="indicator-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="6"/><polyline points="7 3 7 7 10 9"/></svg>'
 	},
@@ -159,14 +167,19 @@ return baseclass.extend({
 		if (!info) return;
 
 		if (info.load) {
-			var load = (info.load[0] / 65536).toFixed(2);
-			this.cpuEl.querySelector('.indicator-value').textContent = load;
-			try { sessionStorage.setItem('glass-status-cpu', load); } catch(e) {}
+			var load1 = info.load[0] / 65536;
 			var load5 = (info.load[1] / 65536).toFixed(2);
 			var load15 = (info.load[2] / 65536).toFixed(2);
-			this.cpuEl.title = 'Load average: ' + load + ' / ' + load5 + ' / ' + load15 + ' (1 / 5 / 15 min)';
+			var pct = Math.min(load1 / this.numCores, 1) * 100;
+			var pctStr = pct.toFixed(0) + '%';
 
-			var level = load < 1.5 ? 'ok' : load < 3.0 ? 'warn' : 'crit';
+			this.cpuEl.querySelector('.indicator-value').textContent = pctStr;
+			try { sessionStorage.setItem('glass-status-cpu', pctStr); } catch(e) {}
+			this.cpuEl.title = 'CPU: ' + pctStr + ' (load ' + load1.toFixed(2) +
+				' / ' + load5 + ' / ' + load15 + ' on ' + this.numCores +
+				(this.numCores === 1 ? ' core)' : ' cores)');
+
+			var level = pct < 60 ? 'ok' : pct < 85 ? 'warn' : 'crit';
 			this.setLevel(this.cpuEl, level);
 		}
 

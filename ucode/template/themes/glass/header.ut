@@ -22,6 +22,7 @@
   let glass_transparency = '0.72';
   let glass_blur_dark = '25';
   let glass_transparency_dark = '0.30';
+  let glass_font_size = '14';
 
   let cfg = cursor();
   if (access('/etc/config/glass')) {
@@ -32,6 +33,7 @@
     glass_transparency      = cfg.get_first('glass', 'global', 'transparency')      ?? glass_transparency;
     glass_blur_dark         = cfg.get_first('glass', 'global', 'blur_dark')         ?? glass_blur_dark;
     glass_transparency_dark = cfg.get_first('glass', 'global', 'transparency_dark') ?? glass_transparency_dark;
+    glass_font_size         = cfg.get_first('glass', 'global', 'font_size')         ?? glass_font_size;
   }
 
   /* Read dark.css for inline injection */
@@ -74,6 +76,9 @@
   </style>
   {% if (access('/etc/config/glass')): %}
   <style>
+    html {
+      font-size: {{ glass_font_size }}px;
+    }
     :root {
       --color-primary: {{ glass_primary }};
       --glass-blur: {{ glass_blur }}px;

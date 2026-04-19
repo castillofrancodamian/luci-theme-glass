@@ -119,3 +119,11 @@ h4 { font-size: 1rem; }
 ::selection {
   background: rgba(var(--color-primary-rgb), 0.25);
 }
+
+/* LuCI injects <input type="submit" class="hidden"> at the top of every
+   CBI form. Without this rule the input renders as an unstyled browser
+   button (seen in PassWall, OpenAppFilter, etc). Both bootstrap and argon
+   themes ship this utility rule. */
+.hidden {
+  display: none;
+}

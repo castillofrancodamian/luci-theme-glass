@@ -40,6 +40,14 @@ return view.extend({
 		o.default = '1';
 		o.rmempty = false;
 
+		o = s.option(form.ListValue, 'font_size', _('Base font size'),
+			_('Scales all text in the theme. Larger values improve readability on high-DPI displays.'));
+		o.value('13', _('Small (13px)'));
+		o.value('14', _('Normal (14px)'));
+		o.value('16', _('Large (16px)'));
+		o.value('18', _('Extra Large (18px)'));
+		o.default = '14';
+
 		/* ── Colors ── */
 		s = m.section(form.NamedSection, 'global', 'global', _('Accent Colors'));
 		s.anonymous = true;
